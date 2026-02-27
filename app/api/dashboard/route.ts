@@ -36,7 +36,7 @@ export async function GET() {
       where: { userId: session.userId },
     });
 
-    const completedSlots = revisionSlots.filter((s:any) => s.completed).length;
+    const completedSlots = revisionSlots.filter((s: { completed: boolean }) => s.completed).length;
     const totalSlots = revisionSlots.length;
 
     const payload = {

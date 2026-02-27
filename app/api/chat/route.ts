@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     console.log('[Chat POST] History messages loaded:', recentMessages.length);
 
     // Build context: history (oldest first) + current user message
-    const historyMessages = recentMessages.reverse().map((m) => ({
+    const historyMessages = recentMessages.reverse().map((m: { role: string; content: string }) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
     }));
@@ -94,14 +94,14 @@ export async function POST(req: NextRequest) {
       if (scheduleBlocks.length > 0) {
         const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
         const scheduleLines = scheduleBlocks
-          .map((b) => `  • ${DAYS[b.dayOfWeek] ?? `Jour ${b.dayOfWeek}`} ${b.startTime}–${b.endTime} : ${b.title}`)
+          .map((b: { dayOfWeek: number; startTime: string; endTime: string; title: string }) => `  • ${DAYS[b.dayOfWeek] ?? `Jour ${b.dayOfWeek}`} ${b.startTime}–${b.endTime} : ${b.title}`)
           .join('\n');
         parts.push(`Emploi du temps :\n${scheduleLines}`);
       }
 
       if (resources.length > 0) {
         const resourceLines = resources
-          .map((r) => `  • [${r.subject}] ${r.title}: ${r.content.substring(0, 150)}`)
+          .map((r: { subject: string; title: string; content: string }) => `  • [${r.subject}] ${r.title}: ${r.content.substring(0, 150)}`)
           .join('\n');
         parts.push(`Ressources récentes :\n${resourceLines}`);
       }
@@ -121,7 +121,10 @@ export async function POST(req: NextRequest) {
 
     console.log('[Chat POST] Sending to Groq — total messages:', contextMessages.length);
 
+        // erreur is here
+
     const aiResponse = await chatWithAI(contextMessages);
+     console.log('[Chat POST] ai response:', aiResponse);
     console.log('[Chat POST] Groq response received, length:', aiResponse.length);
 
     // Save AI response

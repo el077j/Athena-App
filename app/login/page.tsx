@@ -1,8 +1,5 @@
 'use client';
 
-// Static shell — revalidate every hour (ISR)
-export const revalidate = 3600;
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
