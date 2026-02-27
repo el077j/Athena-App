@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// ─── USER ───────────────────────────────────────────────────────
+model User {
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  name                String
+  passwordHash        String
+  level               String?  // lycée, licence, master, etc.
+  objectives          String[] // goals from onboarding
+  onboardingComplete  Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  skills              Skill[]
+  scheduleBlocks      ScheduleBlock[]
+  revisionSlots       RevisionSlot[]
+  resources           Resource[]
+  chatMessages        ChatMessage[]
+  diagnosticResults   DiagnosticResult[]
+
+  @@map("users")
+}
+
+// ─── SKILL (radar chart data) ───────────────────────────────────
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  score     Int      @default(0) // 0-100
+  maxScore  Int      @default(100)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@map("skills")
+}
+
+// ─── DIAGNOSTIC RESULT (onboarding QCM) ─────────────────────────
+model DiagnosticResult {
+  id        String   @id @default(cuid())
+  subject   String
+  score     Int
+  total     Int
+  weakAreas String[]
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("diagnostic_results")
+}
+
+// ─── SCHEDULE BLOCK (imported timetable) ────────────────────────
+model ScheduleBlock {
+  id        String   @id @default(cuid())
+  title     String
+  dayOfWeek Int      // 0=Monday ... 6=Sunday
+  startTime String   // "08:00"
+  endTime   String   // "10:00"
+  type      String   @default("course") // course, personal, revision
+  color     String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("schedule_blocks")
+}
+
+// ─── REVISION SLOT (AI-generated) ───────────────────────────────
+model RevisionSlot {
+  id        String   @id @default(cuid())
+  subject   String
+  method    String   // pomodoro, active-recall, spaced-repetition
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  completed Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("revision_slots")
+}
+
+// ─── RESOURCE (Flow Hub) ────────────────────────────────────────
+model Resource {
+  id        String   @id @default(cuid())
+  title     String
+  type      String   // url, pdf, note
+  content   String   // URL or text content
+  subject   String
+  tags      String[]
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("resources")
+}
+
+// ─── CHAT MESSAGE (AI Assistant) ────────────────────────────────
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String   // user, assistant
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("chat_messages")
+}
